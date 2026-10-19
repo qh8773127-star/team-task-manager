@@ -6,6 +6,7 @@ const passport = require('./config/passport');
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
 const teamRoutes = require('./routes/teamRoutes');
+const taskRoutes = require('./routes/taskRoutes'); 
 require('dotenv').config();
 
 const app = express();
@@ -39,6 +40,7 @@ app.use(passport.session());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Test route
 app.get('/', (req, res) => {

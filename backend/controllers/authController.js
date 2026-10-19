@@ -12,12 +12,7 @@ const registerSchema = z.object({
 const register = async (req, res) => {
   try {
     const validatedData = registerSchema.parse(req.body);
-
-    if (!validatedData) {
-      return res.status(400).json({ error: "Invalid input data" });
-    }
-
-    // 2. Check if user exists
+    
     const userExists = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [validatedData.email],
@@ -30,7 +25,7 @@ const register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(validatedData.password, salt);
-    
+
     const newUser = await pool.query(
       "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
       [validatedData.name, validatedData.email, hashedPassword],
