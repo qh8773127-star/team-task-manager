@@ -4,6 +4,7 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const passport = require('./config/passport'); 
 const pool = require('./config/db');
+const authRoutes = require('./routes/auth');
 require('dotenv').config();
 
 const app = express();
@@ -12,7 +13,7 @@ const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
-// Session Setup (PostgreSQL mein store hoga)
+// Session Setup
 app.use(
   session({
     store: new pgSession({
@@ -23,9 +24,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 1 din
-      httpOnly: true, // Security requirement
-      secure: process.env.NODE_ENV === 'production', // Production mein HTTPS par chalega
+      maxAge: 1000 * 60 * 60 * 24, 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
     },
   })
 );
@@ -33,6 +34,7 @@ app.use(
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
+app.use('/api/auth', authRoutes);
 
 // Test route
 app.get('/', (req, res) => {

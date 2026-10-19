@@ -25,12 +25,11 @@ passport.use(
   })
 );
 
-// Session mein sirf user ki ID save hogi
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Session se ID nikal kar user ka data fetch hoga
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [id]);
