@@ -5,6 +5,7 @@ const pgSession = require('connect-pg-simple')(session);
 const passport = require('./config/passport'); 
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
+const teamRoutes = require('./routes/teamRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -34,7 +35,10 @@ app.use(
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+
 app.use('/api/auth', authRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Test route
 app.get('/', (req, res) => {
@@ -43,5 +47,5 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
