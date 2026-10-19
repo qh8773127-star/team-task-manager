@@ -1,5 +1,6 @@
 const pool = require('../config/db');
-const { taskSchema } = require('../validations/taskValidation');
+const { teamSchema } = require('../validations/teamValidation');
+const { ZodError } = require('zod');
 
 const createTeam = async (req, res) => {
   try {
@@ -28,10 +29,13 @@ const createTeam = async (req, res) => {
       client.release();
     }
   } catch (error) {
-    if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues[0].message });
+    if (error instanceof ZodError) { 
+      return res.status(400).json({ error: error.issues[0].message });
+    }
     console.error("Create Team Error:", error);
     res.status(500).json({ error: "Server error while creating team" });
   }
+
 };
 
 const getTeams = async (req, res) => {
