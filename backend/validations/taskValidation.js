@@ -1,4 +1,4 @@
-import z from "zod";
+const { z } = require('zod');
 
 const taskSchema = z.object({
   title: z.string().min(2, "Title is too short"),
@@ -8,4 +8,4 @@ const taskSchema = z.object({
   status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
 });
 
-module.exports = { taskSchema };
+module.exports = { taskSchema }

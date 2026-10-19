@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const passport = require("../config/passport");
 const { registerSchema } = require('../validations/authValidation');
+const { ZodError } = require('zod');
 
 const register = async (req, res) => {
   try {
