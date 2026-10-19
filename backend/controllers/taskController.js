@@ -1,16 +1,6 @@
 const pool = require("../config/db");
-const { z } = require("zod");
+const { teamSchema } = require('../validations/teamValidation'); 
 
-// Validation Schema
-const taskSchema = z.object({
-  title: z.string().min(2, "Title is too short"),
-  description: z.string().optional(),
-  team_id: z.string().uuid("Invalid team ID"),
-  assignee_id: z.string().uuid("Invalid assignee ID").optional().nullable(),
-  status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
-});
-
-// 1. Create Task
 const createTask = async (req, res) => {
   try {
     const data = taskSchema.parse(req.body);
