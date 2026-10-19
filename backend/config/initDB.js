@@ -1,4 +1,4 @@
-const pool = require('./db'); // Path ab bilkul sahi hai
+const pool = require('./db');
 
 async function createTables() {
   try {
