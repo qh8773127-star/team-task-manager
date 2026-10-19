@@ -7,21 +7,34 @@ const teamSchema = z.object({
 
 const createTeam = async (req, res) => {
   try {
-    const { name } = teamSchema.parse(req.body);
-    const newTeam = await pool.query(
-      'INSERT INTO teams (name, creator_id) VALUES ($1, $2) RETURNING *',
-      [name, req.user.id]
-    );
-   
-    await pool.query(
-      'INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)',
-      [newTeam.rows[0].id, req.user.id]
-    );
+    const { name } = teamSchema.parse(req.body); 
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      const newTeam = await client.query(
+        'INSERT INTO teams (name, creator_id) VALUES ($1, $2) RETURNING *',
+        [name, req.user.id]
+      );
 
-    res.status(201).json(newTeam.rows[0]);
+      await client.query(
+        'INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)',
+        [newTeam.rows[0].id, req.user.id]
+      );
+
+      await client.query('COMMIT');
+      res.status(201).json(newTeam.rows[0]);
+    } catch (dbError) {
+      await client.query('ROLLBACK');
+      throw dbError;
+    } finally {
+      client.release();
+    }
   } catch (error) {
-    if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
-    res.status(500).json({ error: "Server error" });
+    if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues[0].message });
+    console.error("Create Team Error:", error);
+    res.status(500).json({ error: "Server error while creating team" });
   }
 };
 
