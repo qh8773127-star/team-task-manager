@@ -1,18 +1,12 @@
 const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const passport = require("../config/passport");
-const { z } = require("zod"); 
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+const { registerSchema } = require('../validations/authValidation');
 
 const register = async (req, res) => {
   try {
     const validatedData = registerSchema.parse(req.body);
-    
+
     const userExists = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [validatedData.email],
