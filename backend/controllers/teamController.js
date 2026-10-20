@@ -1,41 +1,40 @@
-const pool = require('../config/db');
-const { teamSchema } = require('../validations/teamValidation');
-const { ZodError } = require('zod');
+const pool = require("../config/db");
+const { teamSchema } = require("../validations/teamValidation");
+const { ZodError } = require("zod");
 
 const createTeam = async (req, res) => {
   try {
-    const { name } = teamSchema.parse(req.body); 
+    const { name } = teamSchema.parse(req.body);
     const client = await pool.connect();
-    
+
     try {
-      await client.query('BEGIN');
-      
+      await client.query("BEGIN");
+
       const newTeam = await client.query(
-        'INSERT INTO teams (name, creator_id) VALUES ($1, $2) RETURNING *',
-        [name, req.user.id]
+        "INSERT INTO teams (name, creator_id) VALUES ($1, $2) RETURNING *",
+        [name, req.user.id],
       );
 
       await client.query(
-        'INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)',
-        [newTeam.rows[0].id, req.user.id]
+        "INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)",
+        [newTeam.rows[0].id, req.user.id],
       );
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       res.status(201).json(newTeam.rows[0]);
     } catch (dbError) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw dbError;
     } finally {
       client.release();
     }
   } catch (error) {
-    if (error instanceof ZodError) { 
+    if (error instanceof ZodError) {
       return res.status(400).json({ error: error.issues[0].message });
     }
     console.error("Create Team Error:", error);
     res.status(500).json({ error: "Server error while creating team" });
   }
-
 };
 
 const getTeams = async (req, res) => {
@@ -44,7 +43,7 @@ const getTeams = async (req, res) => {
       `SELECT t.* FROM teams t 
        JOIN team_members tm ON t.id = tm.team_id 
        WHERE tm.user_id = $1`,
-      [req.user.id]
+      [req.user.id],
     );
     res.status(200).json(teams.rows);
   } catch (error) {
@@ -52,4 +51,26 @@ const getTeams = async (req, res) => {
   }
 };
 
-module.exports = { createTeam, getTeams };
+const deleteTeam = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedTeam = await pool.query(
+      "DELETE FROM teams WHERE id = $1 AND creator_id = $2 RETURNING *",
+      [id, req.user.id],
+    );
+
+    if (deletedTeam.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Team not found or you are not the creator" });
+    }
+
+    res.status(200).json({ message: "Team deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+module.exports = { createTeam, getTeams,deleteTeam};
