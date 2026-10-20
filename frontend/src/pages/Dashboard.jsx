@@ -135,6 +135,29 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteTeam = async (teamId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this team? All tasks inside will be lost.",
+      )
+    )
+      return;
+
+    try {
+      await api.delete(`/teams/${teamId}`);
+      // Team list update karein
+      setTeams(teams.filter((t) => t.id !== teamId));
+
+      // Agar deleted team currently selected thi, toh dropdown reset karein
+      if (selectedTeam === teamId) {
+        setSelectedTeam("");
+        setTasks([]);
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to delete team");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -178,17 +201,41 @@ const Dashboard = () => {
           </div>
 
           <div className="flex flex-col gap-3">
-            {teams.map((t) => (
-              <div
-                key={t.id}
-                className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
-              >
-                <h3 className="font-bold text-gray-800">{t.name}</h3>
-              </div>
-            ))}
-            {teams.length === 0 && (
-              <p className="text-gray-500 text-sm">No teams yet. Create one!</p>
-            )}
+            <div className="flex flex-col gap-3">
+              {teams.map((t) => (
+                <div
+                  key={t.id}
+                  className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center group"
+                >
+                  <h3 className="font-bold text-gray-800">{t.name}</h3>
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => handleDeleteTeam(t.id)}
+                    className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete Team"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {teams.length === 0 && (
+                <p className="text-gray-500 text-sm">
+                  No teams yet. Create one!
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
