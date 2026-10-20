@@ -1,117 +1,148 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
+
+const inputClasses =
+  "w-full rounded border px-3 py-2 text-gray-700 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+const labelClasses = "mb-2 block text-sm font-semibold text-gray-700";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [errmsg, setErrmsg] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegister = async (event) => {
+    event.preventDefault();
     setIsLoading(true);
-    setErrmsg("");
+    setErrorMessage("");
+    setValidationErrors([]);
 
     try {
-      await api.post("/auth/register", {
-        name,
-        email,
-        password,
-      });
-
-      navigate("/dashboard");
+      await api.post("/auth/register", formData);
+      navigate("/dashboard", { replace: true });
     } catch (error) {
-      setErrmsg(
-        error.response?.data?.error ||
-          "Registration failed. Try a different email.",
-      );
+      const response = error.response?.data;
+
+      if (response?.errors?.length > 0) {
+        setValidationErrors(response.errors.map((item) => item.message));
+      } else {
+        setErrorMessage(
+          response?.error || "Registration failed. Please try again.",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Register</h2>
-        {errmsg && (
-          <div className="mb-4 p-2 bg-red-100 text-red-600 text-sm rounded border border-red-200">
-            {errmsg}
+    <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+      <section className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
+        <h1 className="mb-6 text-2xl font-bold text-gray-800">
+          Create an Account
+        </h1>
+
+        {(errorMessage || validationErrors.length > 0) && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="mb-5 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
+            {errorMessage && <p>{errorMessage}</p>}
+            {validationErrors.length > 0 && (
+              <ul className="list-disc space-y-1 pl-5">
+                {validationErrors.map((message, index) => (
+                  <li key={`${message}-${index}`}>{message}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
+
         <form onSubmit={handleRegister}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="name"
-            >
+            <label htmlFor="name" className={labelClasses}>
               Name
             </label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="name"
+              name="name"
               type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              placeholder="Enter your name"
+              value={formData.name}
+              onChange={handleChange}
+              className={inputClasses}
+              minLength={2}
+              maxLength={100}
               required
             />
           </div>
+
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="email"
-            >
+            <label htmlFor="email" className={labelClasses}>
               Email
             </label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="email"
+              name="email"
               type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className={inputClasses}
               required
             />
           </div>
+
           <div className="mb-6">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="password"
-            >
+            <label htmlFor="password" className={labelClasses}>
               Password
             </label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="password"
+              name="password"
               type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChange={handleChange}
+              className={inputClasses}
+              minLength={6}
+              maxLength={50}
               required
             />
           </div>
-          <div className="flex items-center justify-between">
-            <button
-              disabled={isLoading}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              type="submit"
-            >
-              {isLoading ? "Registering..." : "Register"}
-            </button>
-          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoading ? "Creating account..." : "Register"}
+          </button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-600">
+
+        <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/" className="text-blue-600 hover:underline font-semibold">
+          <Link to="/" className="font-semibold text-blue-600 hover:underline">
             Login here
           </Link>
         </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

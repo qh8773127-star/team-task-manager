@@ -4,6 +4,7 @@ import api from "../lib/axios";
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
+  // states: 'loading', 'authenticated', 'unauthenticated', 'error'
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
