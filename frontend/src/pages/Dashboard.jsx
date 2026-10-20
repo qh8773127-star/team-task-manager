@@ -20,6 +20,9 @@ const Dashboard = () => {
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isFetchingTasks, setIsFetchingTasks] = useState(false);
 
+  //   search
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     const fetchTeams = async () => {
       try {
@@ -141,6 +144,9 @@ const Dashboard = () => {
       </div>
     );
   }
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -212,11 +218,16 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
+          <input
+            type="text"
+            placeholder="Search tasks by title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+          />
 
-          {/* 👇 TASK LIST (Yahan Fix Hua Hai) */}
           <div className="flex flex-col gap-3">
             {isFetchingTasks ? (
-              // 1. Jab API call chal rahi ho
               <div className="flex items-center justify-center gap-3 py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></span>
                 <span className="text-gray-500 font-medium">
@@ -224,13 +235,15 @@ const Dashboard = () => {
                 </span>
               </div>
             ) : selectedTeam && tasks.length === 0 ? (
-              // 2. Jab API se khali list aaye
               <p className="text-gray-500 text-sm text-center py-10 bg-white rounded-lg border border-dashed border-gray-300">
                 No tasks in this team yet.
               </p>
+            ) : selectedTeam && filteredTasks.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-10 bg-white rounded-lg border border-dashed border-gray-300">
+                No tasks found.
+              </p>
             ) : (
-              // 3. Jab tasks mojood hon
-              tasks.map((task) => (
+              filteredTasks.map((task) => (
                 <div
                   key={task.id}
                   className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
@@ -257,7 +270,6 @@ const Dashboard = () => {
                         <option value="DONE">DONE</option>
                       </select>
 
-                      {/* Delete Button */}
                       <button
                         onClick={() => handleDeleteTask(task.id)}
                         className="text-xs text-red-600 hover:underline font-medium"
