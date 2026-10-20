@@ -101,7 +101,7 @@ const deleteTask = async (req, res) => {
     );
 
     if (deletedTask.rows.length === 0) {
-      return res.status(404).json({ error: "Task not found or unauthorized" });
+      return res.status(404).json({ error: "Task not found" });
     }
 
     res.status(200).json({ message: "Task deleted successfully" });
