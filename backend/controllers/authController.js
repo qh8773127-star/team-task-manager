@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const passport = require("../config/passport");
-const { registerSchema } = require('../validations/authValidation');
-const { ZodError } = require('zod');
+const { registerSchema } = require("../validations/authValidation");
+const { ZodError } = require("zod");
 
 const register = async (req, res) => {
   try {
@@ -46,22 +46,35 @@ const login = (req, res, next) => {
 
     req.logIn(user, (err) => {
       if (err) return next(err);
-      return res
-        .status(200)
-        .json({
-          message: "Logged in successfully",
-          user: { id: user.id, name: user.name, email: user.email },
-        });
+      return res.status(200).json({
+        message: "Logged in successfully",
+        user: { id: user.id, name: user.name, email: user.email },
+      });
     });
   })(req, res, next);
 };
 
-const logout = (req, res) => {
+
+const logout = (req, res, next) => {
   req.logout((err) => {
-    if (err) return res.status(500).json({ error: "Error logging out" });
-    res.status(200).json({ message: "Logged out successfully" });
+    if (err) {
+      return next(err);
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.clearCookie("connect.sid");
+
+      return res.status(200).json({
+        message: "Logged out successfully",
+      });
+    });
   });
 };
+
+module.exports = { logout };
+
 const getMe = (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Not authenticated" });
   res.status(200).json({ user: req.user });
