@@ -124,7 +124,7 @@ const Dashboard = () => {
         title: taskForm.title,
         description: taskForm.description,
         team_id: selectedTeam,
-        assignee_id: taskForm.assignee_id || null, // 👈 Assignee backend ko bheja
+        assignee_id: taskForm.assignee_id || null,  
       });
 
       const res = await api.get(`/tasks?team_id=${selectedTeam}`);
@@ -143,8 +143,6 @@ const Dashboard = () => {
 
   // DELETE TASK
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-
     try {
       await api.delete(`/tasks/${taskId}`);
       setTasks(tasks.filter((t) => t.id !== taskId));
