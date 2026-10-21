@@ -4,7 +4,7 @@ const passport = require("../config/passport");
 const { registerSchema } = require("../validations/authValidation");
 const { ZodError } = require("zod");
 
-// Register
+// 1. REGISTER
 const register = async (req, res, next) => {
   try {
     const validation = registerSchema.safeParse(req.body);
@@ -44,19 +44,11 @@ const register = async (req, res, next) => {
 
     const user = newUser.rows[0];
 
-    // Auto Login after Register
+    // Auto-login block
     req.logIn(user, (err) => {
-      if (err) {
-        console.error("Auto Login Error:", err);
-        return next(err);
-      }
-      
+      if (err) return next(err);
       req.session.save((err) => {
-        if (err) {
-          console.error("Session Save Error:", err);
-          return next(err);
-        }
-
+        if (err) return next(err);
         return res.status(201).json({
           message: "User registered and logged in successfully",
           user: user,
@@ -74,98 +66,56 @@ const register = async (req, res, next) => {
         })),
       });
     }
-
     console.error("Register Error:", error);
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// Login
+// 2. LOGIN
 const login = (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      console.error("Passport Error:", err);
-      return next(err);
-    }
-
-    if (!user) {
-      return res.status(401).json({
-        error: info?.message || "Invalid email or password",
-      });
-    }
+    if (err) return next(err);
+    if (!user) return res.status(401).json({ error: info?.message || "Invalid email or password" });
 
     req.logIn(user, (err) => {
-      if (err) {
-        console.error("Login Session Error:", err);
-        return next(err);
-      }
+      if (err) return next(err);
       req.session.save((err) => {
-        if (err) {
-          console.error("Session Save Error:", err);
-          return next(err);
-        }
-
+        if (err) return next(err);
         return res.status(200).json({
           message: "Logged in successfully",
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-          },
+          user: { id: user.id, name: user.name, email: user.email },
         });
       });
     });
   })(req, res, next);
 };
 
-// Logout
+// 3. LOGOUT
 const logout = (req, res, next) => {
   req.logout((err) => {
-    if (err) {
-      return next(err);
-    }
-
+    if (err) return next(err);
     req.session.destroy((err) => {
-      if (err) {
-        return next(err);
-      }
-
+      if (err) return next(err);
       res.clearCookie("connect.sid");
-
-      return res.status(200).json({
-        message: "Logged out successfully",
-      });
+      return res.status(200).json({ message: "Logged out successfully" });
     });
   });
 };
 
-// Get current user
+// 4. GET ME
 const getMe = (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({
-      error: "Not authenticated",
-    });
-  }
-
-  return res.status(200).json({
-    user: req.user,
-  });
+  if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+  return res.status(200).json({ user: req.user });
 };
 
-// Get all users
+// 5. GET ALL USERS
 const getAllUsers = async (req, res) => {
   try {
     const users = await pool.query("SELECT id, name FROM users");
-
     return res.status(200).json(users.rows);
   } catch (error) {
     console.error("Get All Users Error:", error);
-
-    return res.status(500).json({
-      error: "Server error",
-    });
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
