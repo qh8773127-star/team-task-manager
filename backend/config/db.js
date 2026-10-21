@@ -3,15 +3,11 @@ require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL.includes('neon.tech') ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL.includes('neon.tech') 
+    ? { rejectUnauthorized: false } 
+    : false,
+  max: 1, 
 });
 
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error('❌ Database connection error:', err.stack);
-  }
-  console.log('✅ Connected to PostgreSQL successfully!');
-  release();
-});
 
 module.exports = pool;
