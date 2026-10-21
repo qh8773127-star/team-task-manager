@@ -35,20 +35,20 @@ const Dashboard = () => {
   // Modal States
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
-  
+
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
     assignee_id: "",
   });
-  
+
   const handleTeamSelect = async (e) => {
     const teamId = e.target.value;
     setSelectedTeam(teamId);
-    
+
     if (!teamId) {
-      return; 
+      return;
     }
 
     setIsFetchingTasks(true);
@@ -62,12 +62,12 @@ const Dashboard = () => {
 
     setIsCreatingTeam(true);
     try {
-      await createTeam(newTeamName); 
+      await createTeam(newTeamName);
       setIsTeamModalOpen(false);
       setNewTeamName("");
       toast.success("Team created!");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`)
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to create team");
     } finally {
       setIsCreatingTeam(false);
@@ -86,53 +86,113 @@ const Dashboard = () => {
         description: taskForm.description,
         team_id: selectedTeam,
         assignee_id: taskForm.assignee_id || null,
-      }); 
-      
+      });
+
       setIsTaskModalOpen(false);
       setTaskForm({ title: "", description: "", assignee_id: "" });
       toast.success("Task created!");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`)
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to create task");
     } finally {
       setIsCreatingTask(false);
     }
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await deleteTask(taskId);
-      toast.success("Task deleted");
-    } catch (error) {
-      console.error(`ailed to create task dur to ${error}`)
-      toast.error("Failed to delete task");
-    }
+  const handleDeleteTask = (taskId) => {
+    toast.dismiss();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 p-2">
+          <p className="font-medium text-gray-800">
+            Are you sure you want to delete this task?
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteTask(taskId);
+                  toast.success("Task deleted");
+                } catch (error) {
+                  console.error(`Failed to delete task ${error}`);
+                  toast.error("Failed to delete task");
+                }
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 6000,
+        position: "top-center",
+      },
+    );
   };
 
   const handleUpdateStatus = async (taskId, newStatus) => {
     try {
-      await updateTaskStatus(taskId, newStatus); 
+      await updateTaskStatus(taskId, newStatus);
       toast.success("Status updated");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`)
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to update task");
     }
   };
 
-  const handleDeleteTeam = async (teamId) => {
-    if (!window.confirm("Are you sure? All tasks inside will be lost.")) return;
-    try {
-      await deleteTeam(teamId); 
-      if (selectedTeam === teamId) {
-        setSelectedTeam("");
-      }
-      toast.success("Team deleted");
-    } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to delete team");
-    }
+  const handleDeleteTeam = (teamId) => {
+    toast.dismiss();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 p-2">
+          <p className="font-medium text-gray-800">
+            Are you sure you want to delete this team? All tasks inside will be
+            lost.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteTeam(teamId);
+                  if (selectedTeam === teamId) {
+                    setSelectedTeam("");
+                  }
+                  toast.success("Team deleted");
+                } catch (error) {
+                  toast.error(
+                    error.response?.data?.error || "Failed to delete team",
+                  );
+                }
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 6000,
+        position: "top-center",
+      },
+    );
   };
-
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -145,7 +205,9 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl font-semibold text-gray-600">Loading Dashboard...</div>
+        <div className="text-xl font-semibold text-gray-600">
+          Loading Dashboard...
+        </div>
       </div>
     );
   }
