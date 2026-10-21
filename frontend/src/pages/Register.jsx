@@ -29,7 +29,8 @@ const Register = () => {
     setValidationErrors([]);
 
     try {
-      await api.post("/auth/register", formData);
+      const response = await api.post("/auth/register", formData);
+      localStorage.setItem("userName", response.data.user.name);
       navigate("/dashboard", { replace: true });
     } catch (error) {
       const response = error.response?.data;
