@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 👈 useEffect import karein
 import { useNavigate, Link } from "react-router-dom";
 import api from "../lib/axios";
 
@@ -16,6 +16,19 @@ const Login = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // 👇 NAYA CODE: Page load hote hi check karein ke user logged in hai ya nahi
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.get("/auth/me");
+        navigate("/dashboard", { replace: true });
+      } catch (error) {
+        console.error(`Unauthorized access ${error}`)
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -47,7 +60,6 @@ const Login = () => {
       <section className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
         <h1 className="mb-6 text-2xl font-bold text-gray-800">Welcome Back</h1>
 
-        {/* Error Alert (Aria live for accessibility) */}
         {errorMessage && (
           <div
             role="alert"
