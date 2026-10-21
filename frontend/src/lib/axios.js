@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://team-task-manager-nine-teal.vercel.app/api',
+  baseURL: 'https://team-task-manager-dfm6tkps3-gam-z.vercel.app/api',
   withCredentials: true,
 });
 
