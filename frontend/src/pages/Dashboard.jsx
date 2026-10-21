@@ -273,7 +273,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE: TASKS SECTION */}
         <div className="md:col-span-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
             <h2 className="text-lg font-bold text-gray-800">Tasks</h2>
@@ -299,7 +298,6 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
-
           {/* FILTERS: Search & Assignee Dropdown */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <input

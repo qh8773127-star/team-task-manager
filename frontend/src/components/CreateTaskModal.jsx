@@ -32,7 +32,6 @@ const CreateTaskModal = ({
             placeholder="Description (optional)"
             rows="2"
           />
-          {/* 👈 Assignee Field */}
           <select
             value={taskForm.assignee_id || ""}
             onChange={(e) =>
