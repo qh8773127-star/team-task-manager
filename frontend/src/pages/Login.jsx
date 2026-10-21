@@ -28,7 +28,8 @@ const Login = () => {
     setErrorMessage("");
 
     try {
-      await api.post("/auth/login", formData);
+      const response = await api.post("/auth/login", formData);
+      localStorage.setItem("userName", response.data.user.name);
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
