@@ -44,7 +44,7 @@ const register = async (req, res, next) => {
 
     const user = newUser.rows[0];
 
-  //login 
+  //login a user 
     req.logIn(user, (err) => {
       if (err) {
         console.error("Auto Login Error:", err);
