@@ -1,30 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../lib/axios";
 import toast from "react-hot-toast";
 import CreateTeamModal from "../components/CreateTeamModal";
 import CreateTaskModal from "../components/CreateTaskModal";
 import TaskCard from "../components/TaskCard";
+import Navbar from "../components/Navbar";
+import { authApi } from "../lib/api";
+import { useTasks } from "../hooks/useTasks";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const {
+    teams,
+    tasks,
+    users,
+    loading,
+    createTeam,
+    deleteTeam,
+    fetchTasksByTeam,
+    createTask,
+    deleteTask,
+    updateTaskStatus,
+  } = useTasks();
 
-  // 1. DATA STATES
-  const [teams, setTeams] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // 2. FILTER STATES
   const [selectedTeam, setSelectedTeam] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
 
-  // 3. LOADING STATES
+  // UI Loading States
   const [isFetchingTasks, setIsFetchingTasks] = useState(false);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
-  // 4. MODAL STATES
+  // Modal States
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
 
@@ -35,84 +43,37 @@ const Dashboard = () => {
     assignee_id: "",
   });
 
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const teamsRes = await api.get("/teams");
-        setTeams(teamsRes.data);
-
-        const usersRes = await api.get("/auth/users");
-        setUsers(usersRes.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // FETCH TEAMS ON LOAD
-
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/teams");
-        setTeams(response.data);
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-        toast.error("Failed to load teams");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTeams();
-  }, []);
-
-  // HANDLE TEAM SELECT & FETCH TASKS
   const handleTeamSelect = async (e) => {
     const teamId = e.target.value;
     setSelectedTeam(teamId);
-    setTasks([]);
 
-    if (!teamId) return;
+    if (!teamId) {
+      return;
+    }
 
     setIsFetchingTasks(true);
-    try {
-      const response = await api.get(`/tasks?team_id=${teamId}`);
-      setTasks(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast.error("Failed to load tasks");
-    } finally {
-      setIsFetchingTasks(false);
-    }
+    await fetchTasksByTeam(teamId);
+    setIsFetchingTasks(false);
   };
 
-  // CREATE TEAM
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     if (!newTeamName.trim()) return;
 
     setIsCreatingTeam(true);
     try {
-      await api.post("/teams", { name: newTeamName });
-      const res = await api.get("/teams");
-      setTeams(res.data);
+      await createTeam(newTeamName);
       setIsTeamModalOpen(false);
       setNewTeamName("");
       toast.success("Team created!");
     } catch (error) {
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to create team");
-      console.error(`Error creating team: ${error.message}`);
     } finally {
       setIsCreatingTeam(false);
     }
   };
 
-  // CREATE TASK
   const handleCreateTask = async (e) => {
     e.preventDefault();
     if (!selectedTeam) return toast.error("Please select a team first!");
@@ -120,80 +81,136 @@ const Dashboard = () => {
 
     setIsCreatingTask(true);
     try {
-      await api.post("/tasks", {
+      await createTask({
         title: taskForm.title,
         description: taskForm.description,
         team_id: selectedTeam,
-        assignee_id: taskForm.assignee_id || null,  
+        assignee_id: taskForm.assignee_id || null,
       });
-
-      const res = await api.get(`/tasks?team_id=${selectedTeam}`);
-      setTasks(res.data);
 
       setIsTaskModalOpen(false);
       setTaskForm({ title: "", description: "", assignee_id: "" });
       toast.success("Task created!");
     } catch (error) {
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to create task");
-      console.error(`Error creating task: ${error.message}`);
     } finally {
       setIsCreatingTask(false);
     }
   };
 
-  // DELETE TASK
-  const handleDeleteTask = async (taskId) => {
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter((t) => t.id !== taskId));
-      toast.success("Task deleted");
-    } catch (error) {
-      console.error(`Error deleting task: ${error.message}`);
-      toast.error("Failed to delete task");
-    }
+  const handleDeleteTask = (taskId) => {
+    toast.dismiss();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 p-2">
+          <p className="font-medium text-gray-800">
+            Are you sure you want to delete this task?
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteTask(taskId);
+                  toast.success("Task deleted");
+                } catch (error) {
+                  console.error(`Failed to delete task ${error}`);
+                  toast.error("Failed to delete task");
+                }
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 6000,
+        position: "top-center",
+      },
+    );
   };
 
-  // UPDATE TASK STATUS
   const handleUpdateStatus = async (taskId, newStatus) => {
     try {
-      await api.put(`/tasks/${taskId}`, { status: newStatus });
-      setTasks(
-        tasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)),
-      );
+      await updateTaskStatus(taskId, newStatus);
       toast.success("Status updated");
     } catch (error) {
-      console.error(`Error updating task status: ${error.message}`);
+      console.error(`ailed to create task dur to ${error}`);
       toast.error("Failed to update task");
     }
   };
 
-  // DELETE TEAM
-  const handleDeleteTeam = async (teamId) => {
-    if (!window.confirm("Are you sure? All tasks inside will be lost.")) return;
-
-    try {
-      await api.delete(`/teams/${teamId}`);
-      setTeams(teams.filter((t) => t.id !== teamId));
-      if (selectedTeam === teamId) {
-        setSelectedTeam("");
-        setTasks([]);
-      }
-      toast.success("Team deleted");
-    } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to delete team");
-    }
+  const handleDeleteTeam = (teamId) => {
+    toast.dismiss();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 p-2">
+          <p className="font-medium text-gray-800">
+            Are you sure you want to delete this team? All tasks inside will be
+            lost.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await deleteTeam(teamId);
+                  if (selectedTeam === teamId) {
+                    setSelectedTeam("");
+                  }
+                  toast.success("Team deleted");
+                } catch (error) {
+                  toast.error(
+                    error.response?.data?.error || "Failed to delete team",
+                  );
+                }
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 6000,
+        position: "top-center",
+      },
+    );
   };
-
-  // LOGOUT
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout");
+      await authApi.logout();
       navigate("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl font-semibold text-gray-600">
+          Loading Dashboard...
+        </div>
+      </div>
+    );
+  }
   // FILTER LOGIC
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title
@@ -205,34 +222,13 @@ const Dashboard = () => {
     return matchesSearch && matchesAssignee;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl font-semibold text-gray-600">
-          Loading Dashboard...
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* NAVBAR */}
-      <nav className="bg-white shadow-sm px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="text-lg md:text-xl font-bold text-gray-800">
-          Team Task Manager
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm md:text-base text-red-600 font-medium hover:underline"
-        >
-          Logout
-        </button>
-      </nav>
+      <Navbar onLogout={handleLogout} />
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* LEFT SIDE: TEAMS LIST */}
         <div className="md:col-span-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-800">Your Teams</h2>
@@ -277,7 +273,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE: TASKS SECTION */}
         <div className="md:col-span-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
             <h2 className="text-lg font-bold text-gray-800">Tasks</h2>
@@ -303,7 +298,6 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
-
           {/* FILTERS: Search & Assignee Dropdown */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <input
