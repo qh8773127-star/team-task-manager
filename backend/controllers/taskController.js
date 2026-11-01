@@ -5,7 +5,6 @@ const { ZodError } = require("zod");
 const createTask = async (req, res) => {
   try {
     const data = taskSchema.parse(req.body);
-    // Check if user is member of the team
     const isMember = await pool.query(
       "SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2",
       [data.team_id, req.user.id],
@@ -76,18 +75,17 @@ const updateTask = async (req, res) => {
            description = COALESCE($2, description), 
            status = COALESCE($3, status), 
            assignee_id = COALESCE($4, assignee_id)
-       WHERE id = $5 AND creator_id = $6 RETURNING *`,
+       WHERE id = $5 AND (creator_id = $6 OR assignee_id = $6) RETURNING *`,
       [title, description, status, assignee_id, id, req.user.id],
     );
 
     if (updatedTask.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "Task not found or you are not the creator" });
+      return res.status(404).json({ error: "Task not found or you don't have permission" });
     }
 
     res.status(200).json(updatedTask.rows[0]);
   } catch (error) {
+    console.error("Update Task Error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };

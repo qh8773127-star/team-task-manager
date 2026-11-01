@@ -4,7 +4,6 @@ const passport = require("../config/passport");
 const { registerSchema } = require("../validations/authValidation");
 const { ZodError } = require("zod");
 
-// 1. REGISTER
 const register = async (req, res, next) => {
   try {
     const validation = registerSchema.safeParse(req.body);
@@ -43,8 +42,6 @@ const register = async (req, res, next) => {
     );
 
     const user = newUser.rows[0];
-
-    // Auto-login block
     req.logIn(user, (err) => {
       if (err) return next(err);
       req.session.save((err) => {
@@ -71,7 +68,6 @@ const register = async (req, res, next) => {
   }
 };
 
-// 2. LOGIN
 const login = (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) return next(err);
@@ -90,7 +86,6 @@ const login = (req, res, next) => {
   })(req, res, next);
 };
 
-// 3. LOGOUT
 const logout = (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -102,13 +97,11 @@ const logout = (req, res, next) => {
   });
 };
 
-// 4. GET ME
 const getMe = (req, res) => {
   if (!req.user) return res.status(401).json({ error: "Not authenticated" });
   return res.status(200).json({ user: req.user });
 };
 
-// 5. GET ALL USERS
 const getAllUsers = async (req, res) => {
   try {
     const users = await pool.query("SELECT id, name FROM users");

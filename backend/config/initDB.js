@@ -63,8 +63,6 @@ async function createTables() {
     await pool.query(`
       CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     `);
-
-    console.log("✅ All tables created successfully!");
     process.exit(0);
   } catch (error) {
     console.error("❌ Error creating tables:", error);
