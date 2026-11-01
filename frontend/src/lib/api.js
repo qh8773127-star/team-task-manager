@@ -3,12 +3,14 @@ export const authApi = {
   login: (data) => api.post("/auth/login", data),
   register: (data) => api.post("/auth/register", data),
   logout: () => api.post("/auth/logout"),
-  getUsers: () => api.get("/auth/users"), 
+  getUsers: () => api.get("/auth/users"),
 };
 export const teamApi = {
   getAll: () => api.get("/teams"),
   create: (data) => api.post("/teams", data),
   delete: (teamId) => api.delete(`/teams/${teamId}`),
+  addMember: (teamId, email) => api.post(`/teams/${teamId}/members`, { email }),
+  getTeamMembers: (teamId) => api.get(`/teams/${teamId}/members`),
 };
 
 export const taskApi = {
