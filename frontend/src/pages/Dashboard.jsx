@@ -27,12 +27,10 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
 
-  // UI Loading States
   const [isFetchingTasks, setIsFetchingTasks] = useState(false);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
-  // Modal States
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
 
@@ -64,10 +62,11 @@ const Dashboard = () => {
     try {
       await createTeam(newTeamName);
       setIsTeamModalOpen(false);
+
       setNewTeamName("");
       toast.success("Team created!");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`);
+      console.error(`Failed to create task due to ${error}`);
       toast.error("Failed to create team");
     } finally {
       setIsCreatingTeam(false);
@@ -92,7 +91,7 @@ const Dashboard = () => {
       setTaskForm({ title: "", description: "", assignee_id: "" });
       toast.success("Task created!");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`);
+      console.error(`Failed to create task due to ${error}`);
       toast.error("Failed to create task");
     } finally {
       setIsCreatingTask(false);
@@ -144,7 +143,7 @@ const Dashboard = () => {
       await updateTaskStatus(taskId, newStatus);
       toast.success("Status updated");
     } catch (error) {
-      console.error(`ailed to create task dur to ${error}`);
+      console.error(`Failed to create task due to ${error}`);
       toast.error("Failed to update task");
     }
   };
@@ -211,7 +210,6 @@ const Dashboard = () => {
       </div>
     );
   }
-  // FILTER LOGIC
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title
       .toLowerCase()
@@ -224,10 +222,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* NAVBAR */}
       <Navbar onLogout={handleLogout} />
-
-      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
           <div className="flex justify-between items-center mb-4">
@@ -249,7 +244,7 @@ const Dashboard = () => {
                 <h3 className="font-bold text-gray-800">{t.name}</h3>
                 <button
                   onClick={() => handleDeleteTeam(t.id)}
-                  className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-gray-400 sm:text-red-600,opacity-0,group-hover:opacity-100,transition-opacity hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Delete Team"
                 >
                   <svg
@@ -284,8 +279,6 @@ const Dashboard = () => {
               + Add Task
             </button>
           </div>
-
-          {/* TEAM SELECTOR */}
           <select
             onChange={handleTeamSelect}
             value={selectedTeam}
@@ -298,7 +291,6 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
-          {/* FILTERS: Search & Assignee Dropdown */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <input
               type="text"
@@ -321,7 +313,6 @@ const Dashboard = () => {
             </select>
           </div>
 
-          {/* TASK LIST */}
           <div className="flex flex-col gap-3">
             {isFetchingTasks ? (
               <div className="flex items-center justify-center gap-3 py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -353,7 +344,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* MODALS */}
       <CreateTeamModal
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}
