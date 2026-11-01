@@ -8,7 +8,6 @@ export const useTasks = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,7 +28,6 @@ export const useTasks = () => {
     fetchData();
   }, []);
 
-  // --- TEAM FUNCTIONS ---
   const createTeam = async (name) => {
     await teamApi.create({ name });
     const res = await teamApi.getAll();
@@ -42,7 +40,6 @@ export const useTasks = () => {
     setTasks(tasks.filter((t) => t.team_id !== teamId)); 
   };
 
-  // --- TASK FUNCTIONS ---
   const fetchTasksByTeam = async (teamId) => {
     const res = await taskApi.getByTeam(teamId);
     setTasks(res.data);
