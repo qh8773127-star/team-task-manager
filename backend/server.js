@@ -37,12 +37,12 @@ app.use(
       httpOnly: true,
 
       // for dev
-      secure: false,
-      sameSite: "lax",
+      // secure: false,
+      // sameSite: "lax",
 
       // for prod
-      // secure: true,
-      // sameSite: "none",
+      secure: true,
+      sameSite: "none",
     },
   }),
 );

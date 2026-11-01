@@ -116,4 +116,37 @@ const getTeamMembers = async (req, res) => {
   }
 };
 
-module.exports = { createTeam, getTeams, deleteTeam, addTeamMember, getTeamMembers};
+const removeTeamMember = async (req, res) => {
+  try {
+    const { teamId, userId } = req.params;
+
+    const team = await pool.query("SELECT creator_id FROM teams WHERE id = $1", [teamId]);
+    
+    if (team.rows.length === 0) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    if (team.rows[0].creator_id !== req.user.id) {
+      return res.status(403).json({ error: "Only the team creator can remove members." });
+    }
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: "You cannot remove yourself from the team." });
+    }
+    const deleted = await pool.query(
+      "DELETE FROM team_members WHERE team_id = $1 AND user_id = $2 RETURNING *",
+      [teamId, userId]
+    );
+
+    if (deleted.rows.length === 0) {
+      return res.status(404).json({ error: "Member not found in this team" });
+    }
+
+    res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.error("Remove Member Error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+module.exports = { createTeam, getTeams, deleteTeam, addTeamMember, getTeamMembers, removeTeamMember};
