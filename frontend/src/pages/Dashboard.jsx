@@ -160,7 +160,7 @@ const Dashboard = () => {
                   <button
                     disabled={addMemberLoading}
                     type="submit"
-                    className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                    className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors whitespace-nowrap flex items-center justify-center"
                   >
                     {addMemberLoading ? "Adding..." : "Add Member"}
                   </button>
