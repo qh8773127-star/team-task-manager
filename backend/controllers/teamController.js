@@ -73,4 +73,47 @@ const deleteTeam = async (req, res) => {
   }
 };
 
-module.exports = { createTeam, getTeams,deleteTeam};
+const addTeamMember = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { email } = req.body;
+
+    const team = await pool.query("SELECT * FROM teams WHERE id = $1 AND creator_id = $2", [teamId, req.user.id]);
+    if (team.rows.length === 0) {
+      return res.status(403).json({ error: "Only the team creator can add members." });
+    }
+
+    const user = await pool.query("SELECT id, name FROM users WHERE email = $1", [email]);
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: "User with this email does not exist." });
+    }
+
+    const isMember = await pool.query("SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2", [teamId, user.rows[0].id]);
+    if (isMember.rows.length > 0) {
+      return res.status(400).json({ error: "User is already a member of this team." });
+    }
+    await pool.query("INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)", [teamId, user.rows[0].id]);
+    res.status(201).json({ message: "Member added successfully", member: user.rows[0] });
+  } catch (error) {
+    console.error("Add Member Error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const getTeamMembers = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const members = await pool.query(
+      `SELECT u.id, u.name, u.email 
+       FROM users u 
+       JOIN team_members tm ON u.id = tm.user_id 
+       WHERE tm.team_id = $1`,
+      [teamId]
+    );
+    res.status(200).json(members.rows);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+module.exports = { createTeam, getTeams, deleteTeam, addTeamMember, getTeamMembers};
