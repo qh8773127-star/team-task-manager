@@ -35,10 +35,16 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
-      secure: true, 
-      sameSite: "none",
+
+      // for dev
+      secure: false,
+      sameSite: "lax",
+
+      // for prod
+      // secure: true,
+      // sameSite: "none",
     },
-  })
+  }),
 );
 
 // Passport Middleware
