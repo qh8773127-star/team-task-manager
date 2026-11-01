@@ -3,6 +3,7 @@ import CreateTaskModal from "../components/CreateTaskModal";
 import TaskCard from "../components/TaskCard";
 import Navbar from "../components/Navbar";
 import { useDashboardLogic } from "../hooks/useDashboardLogic";
+import ViewMembersModal from "../components/ViewMembersModal";
 
 const Dashboard = () => {
   const {
@@ -37,6 +38,9 @@ const Dashboard = () => {
     handleDeleteTeam,
     handleLogout,
     addMemberLoading,
+    isMembersModalOpen,
+    setIsMembersModalOpen,
+    handleRemoveMember,
   } = useDashboardLogic();
 
   if (loading) {
@@ -48,7 +52,7 @@ const Dashboard = () => {
       </div>
     );
   }
-
+  const currentTeam = teams.find((t) => t.id === selectedTeam);
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar onLogout={handleLogout} />
@@ -141,8 +145,22 @@ const Dashboard = () => {
               >
                 {addMemberLoading ? "Adding..." : "Add Member"}
               </button>
+              <button
+                onClick={() => setIsMembersModalOpen(true)}
+                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
+              >
+                View Members
+              </button>
             </form>
           )}
+
+          <ViewMembersModal
+            isOpen={isMembersModalOpen}
+            onClose={() => setIsMembersModalOpen(false)}
+            members={teamMembers}
+            creatorId={currentTeam?.creator_id}
+            onRemove={handleRemoveMember}
+          />
 
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <input

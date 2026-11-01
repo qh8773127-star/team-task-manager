@@ -11,6 +11,7 @@ export const teamApi = {
   delete: (teamId) => api.delete(`/teams/${teamId}`),
   addMember: (teamId, email) => api.post(`/teams/${teamId}/members`, { email }),
   getTeamMembers: (teamId) => api.get(`/teams/${teamId}/members`),
+  removeMember: (teamId, userId) => api.delete(`/teams/${teamId}/members/${userId}`),
 };
 
 export const taskApi = {

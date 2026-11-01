@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authApi } from "../lib/api";
+import { authApi,teamApi } from "../lib/api";
 import { useTasks } from "./useTasks";
 
 export const useDashboardLogic = () => {
@@ -20,11 +20,13 @@ export const useDashboardLogic = () => {
     fetchTeamMembers,
   } = useTasks();
 
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+
   const [selectedTeam, setSelectedTeam] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);
   const [newMemberEmail, setNewMemberEmail] = useState("");
 
-  const[addMemberLoading,setAddMemberLoading]=useState(false);
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
@@ -43,26 +45,26 @@ export const useDashboardLogic = () => {
     assignee_id: "",
   });
 
- const handleTeamSelect = async (e) => {
-  const teamId = e.target.value;
-  setSelectedTeam(teamId);
+  const handleTeamSelect = async (e) => {
+    const teamId = e.target.value;
+    setSelectedTeam(teamId);
 
-  if (!teamId) {
-    setTeamMembers([]);
-    return;
-  }
-  setIsFetchingTasks(true);
-  try {
-    await fetchTasksByTeam(teamId);
-    const members = await fetchTeamMembers(teamId);
-    setTeamMembers(members);
-  } catch (error) {
-    console.error("Error fetching team data:", error);
-    toast.error("Failed to load team details");
-  } finally {
-    setIsFetchingTasks(false);
-  }
-};
+    if (!teamId) {
+      setTeamMembers([]);
+      return;
+    }
+    setIsFetchingTasks(true);
+    try {
+      await fetchTasksByTeam(teamId);
+      const members = await fetchTeamMembers(teamId);
+      setTeamMembers(members);
+    } catch (error) {
+      console.error("Error fetching team data:", error);
+      toast.error("Failed to load team details");
+    } finally {
+      setIsFetchingTasks(false);
+    }
+  };
 
   const handleAddMember = async (e) => {
     e.preventDefault();
@@ -78,7 +80,7 @@ export const useDashboardLogic = () => {
       setTeamMembers(updatedMembers);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to add member");
-    }finally{
+    } finally {
       setAddMemberLoading(false);
     }
   };
@@ -226,6 +228,17 @@ export const useDashboardLogic = () => {
     return matchesSearch && matchesAssignee;
   });
 
+  const handleRemoveMember = async (userId) => {
+    try {
+      await teamApi.removeMember(selectedTeam, userId);
+      toast.success("Member removed");
+      const updatedMembers = await fetchTeamMembers(selectedTeam);
+      setTeamMembers(updatedMembers);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to remove member");
+    }
+  };
+
   return {
     teams,
     loading,
@@ -257,6 +270,9 @@ export const useDashboardLogic = () => {
     handleDeleteTeam,
     handleLogout,
     setNewMemberEmail,
-    addMemberLoading
+    addMemberLoading,
+    isMembersModalOpen,
+    setIsMembersModalOpen,
+    handleRemoveMember
   };
 };
