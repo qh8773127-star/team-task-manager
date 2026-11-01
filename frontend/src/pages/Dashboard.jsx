@@ -147,7 +147,7 @@ const Dashboard = () => {
               </button>
             </div>
             {selectedTeam && (
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3">
                 <form onSubmit={handleAddMember} className="flex flex-1 gap-2">
                   <input
                     type="email"
